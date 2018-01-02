@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <title>Chinese Checkers - Welcome</title>
+        <link rel="stylesheet" type="text/css" href="@routes.Assets.at("stylesheets/welcome.css")">
+
+    </head>
+    <body>
+        <h1>Chinese Checkers Web App</h1>
+        <h2>It's a simple game of chinese checkers written in Java using Play Framework and Akka actor system.</h2>
+        <h3>Enter your username to start</h3>
+        <form action="@routes.Application.gameRoom()">
+            <input id="username" name="username" type="text" placeholder="Username">
+            <button class="button" type="submit">SIGN IN</button>
+        </form>
+    </body>
+</html>
