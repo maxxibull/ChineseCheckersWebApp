@@ -4,9 +4,12 @@
 
 # Home page
 GET     /                                controllers.Application.index
-GET     /room                            controllers.Application.gameRoom(username: String ?= null)
-GET     /room/game                       controllers.Application.game(username)
-GET     /assets/javascripts/chatroom.js  controllers.Application.gameRoomJs(username)
+GET     /waitingroom                     controllers.Application.waitingRoom(username: String ?= null)
+GET     /room                            controllers.Application.gameRoom(username, gameName: String, playersNumber: Integer, botsNumber: Integer)
+GET     /room/newgame                    controllers.Application.newGame(username)
+GET     /room/game1                      controllers.Application.game(username: String, gameName: String)
+GET     /room/game2                      controllers.Application.gameNew(username: String, gameName: String, playersNumber: Integer, botsNumber: Integer)
+GET     /assets/javascripts/gameroom.js  controllers.Application.gameRoomJs(username, gameName: String, playersNumber: Integer, botsNumber: Integer)
 
 # Map static resources from the /public folder to the /assets URL path
 GET     /assets/*file               controllers.Assets.at(path="/public", file)

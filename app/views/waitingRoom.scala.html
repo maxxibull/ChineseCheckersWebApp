@@ -1,0 +1,46 @@
+@(username: String)(listOfGames: String)
+
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <title>Chinese Checkers - Waiting Room</title>
+        <link rel="stylesheet" type="text/css" href="@routes.Assets.at("stylesheets/waiting.css")">
+    </head>
+    <body>
+        <h1>Chinese Checkers Web App</h1>
+        <h2>Hey @username! Choose game to join or create new one.</h2>
+        <span>
+            <form action="@routes.Application.newGame(username)">
+                <input id="username" name="username" type="hidden" value="@username">
+                <input action="submit" type="submit" value="NEW GAME">
+            </form>
+        </span>
+        <span>
+            <h3>Games</h3>
+            <ul id="games-list">
+
+            </ul>
+        </span>
+
+        <script>
+            var i, item, link, node, 
+                element = document.getElementById("games-list");
+
+            var json = @listOfGames;
+
+            var curPiece = null;
+
+            for(i = 0; i < json.games.length; i++) {
+                curPiece = json.games[i];
+                item = document.createElement("li");
+                link = document.createElement("a");
+                link.href = "/room?username=@username&gameName=" + curPiece + "&playersNumber=0&botsNumber=0";
+                node = document.createTextNode(curPiece);
+                item.appendChild(link);
+                link.appendChild(node);
+                element.appendChild(item);
+            }
+        </script>
+    </body>
+</html>

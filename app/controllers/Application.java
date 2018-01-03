@@ -14,32 +14,42 @@ public class Application extends Controller {
         return ok(index.render());
     }
 
-    /**
-     * Display the chat room.
-     */
-    public static Result gameRoom(String username) {
+    public static Result waitingRoom(String username) {
         if(username == null || username.trim().equals("")) {
             return redirect(routes.Application.index());
         }
-        return ok(gameRoom.render(username));
+        return ok(waitingRoom.render(username, WaitingRoom.getGames()));
     }
 
-    public static Result gameRoomJs(String username) {
-        return ok(views.js.gameRoom.render(username));
+    public static Result gameRoom(String username, String gameName, int nP, int nB) {
+        return ok(gameRoom.render(username, gameName, nP, nB));
     }
 
-    /**
-     * Handle the chat websocket.
-     */
-    public static WebSocket<JsonNode> game(final String username) {
+    public static Result gameRoomJs(String username, String nameGame, int nP, int nB) {
+        return ok(views.js.gameRoom.render(username, nameGame, nP, nB));
+    }
+
+    public static Result newGame(String username) {
+        return ok(newGame.render(username));
+    }
+
+    public static WebSocket<JsonNode> gameNew(final String username, final String nameGame, final int players, final int bots) {
         return new WebSocket<JsonNode>() {
-
-            // Called when the Websocket Handshake is done.
             public void onReady(WebSocket.In<JsonNode> in, WebSocket.Out<JsonNode> out){
-
-                // Join the chat room.
                 try {
-                    GameRoom.join(username, in, out);
+                    WaitingRoom.join(username, true, nameGame, players, bots, in, out);
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+            }
+        };
+    }
+
+    public static WebSocket<JsonNode> game(final String username, final String nameGame) {
+        return new WebSocket<JsonNode>() {
+            public void onReady(WebSocket.In<JsonNode> in, WebSocket.Out<JsonNode> out){
+                try {
+                    WaitingRoom.join(username, false, nameGame, 0, 0, in, out);
                 } catch (Exception ex) {
                     ex.printStackTrace();
                 }

@@ -1,0 +1,51 @@
+@(username: String)
+
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <title>Chinese Checkers - New Game</title>
+        <link rel="stylesheet" type="text/css" href="@routes.Assets.at("stylesheets/newgame.css")">
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+        <script>
+            $(document).ready(function () {
+                $("#players-number").change(function () {
+                    var val = $(this).val();
+                    if (val == "2") {
+                        $("#bots-number").html("<option value='0'>0</option><option value='1'>1</option>");
+                    } else if (val == "3") {
+                        $("#bots-number").html("<option value='0'>0</option><option value='1'>1</option><option value='2'>2</option>");
+                    } else if (val == "4") {
+                        $("#bots-number").html("<option value='0'>0</option><option value='1'>1</option><option value='2'>2</option><option value='3'>3</option>");
+                    } else if (val == "6") {
+                        $("#bots-number").html("<option value='0'>0</option><option value='1'>1</option><option value='2'>2</option><option value='3'>3</option><option value='4'>4</option><option value='5'>5</option>");
+                    }
+                });
+            });
+        </script>
+    </head>
+    <body>
+        <h1>Chinese Checkers Web App</h1>
+        <h2>Fill the form and submit, @username.</h2>
+        <form action="/room">
+            <input id="username" name="username" type="hidden" value="@username">
+            <span>Name of new game:</span><br>
+            <input id="game-name" name="gameName" type="text" placeholder="Name">
+            <br><span>Number of players:</span><br>
+            <select id="players-number" name="playersNumber">
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+                <option value="6">6</option>
+            </select>
+            <br><span>Number of bots:</span><br>
+            <select id="bots-number" name="botsNumber">
+                <option value="0">0</option>
+                <option value="1">1</option>
+            </select>
+            <br>
+            <input action="submit" type="submit" value="SUBMIT">
+        </form>
+        <div id="my"></div>
+    </body>
+</html>

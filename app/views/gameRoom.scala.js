@@ -1,4 +1,4 @@
-@(username: String)
+@(username: String)(nameGame: String)(numberPlayers: Integer)(numberBots: Integer)
 
 var NUMBER_OF_COLS = 13,
 	NUMBER_OF_ROWS = 17,
@@ -60,7 +60,7 @@ function getPieceAtBlockForTeam(teamOfPieces, clickedBlock) {
 	return pieceAtBlock;
 }
 
-function blockOccupiedByEnemy(clickedBlock) {
+function blockOccupiedByEnemy(clickedBlock) { //do usuniecia
     var occupiedPiece = null;
 
 	if(currentTurn !== json.red) {
@@ -292,6 +292,8 @@ function drawBoard() {
 
 function checkIfPieceClicked(clickedBlock) {
     var pieceAtBlock = getPieceAtBlockForTeam(currentTurn, clickedBlock);
+
+    if(currentTurn)
     
     if(pieceAtBlock !== null) {
         selectedPiece = pieceAtBlock;
@@ -337,7 +339,7 @@ function drawNewPawn() {
     }
 }
 
-function nextTurn() {
+function nextTurn() { //do usuniecia - serwer bedzie wysylal info z tura
     if(currentTurn === json.red) {
         currentTurn = json.green;
         currentColor = "GREEN";
@@ -372,29 +374,29 @@ function nextTurn() {
     displayTurn();
 }
 
-function movePieceFromAnswer(clickedBlock) {
-    drawBlock(currentTurn[selectedPiece.position].col, currentTurn[selectedPiece.position].row);
-
-    var team = currentTurn,
-        teamFields = json.fields;
-    var newPiece = getPieceAtBlockForTeam(json.fields, clickedBlock);
-
-    team[selectedPiece.position].col = clickedBlock.col;
-    team[selectedPiece.position].row = clickedBlock.row;
-    team[selectedPiece.position].sRow = teamFields[newPiece.position].sRow;
-    team[selectedPiece.position].sCol = teamFields[newPiece.position].sCol;
-
-    drawNewPawn();
-
-    nextTurn();
-
-    selectedPiece = null;
+function getColor(colorText) {
+    if(colorText === "green") {
+        return GREEN;
+    }
+    else if(colorText === "red") {
+        return RED;
+    }
+    else if(colorText === "yellow") {
+        return YELLOW;
+    }
+    else if(colorText === "blue") {
+        return BLUE;
+    }
+    else if(colorText === "black") {
+        return BLACK;
+    }
+    else if(colorText === "orange") {
+        return ORANGE;
+    }
 }
 
 function movePiece(clickedBlock) {
     drawBlock(currentTurn[selectedPiece.position].col, currentTurn[selectedPiece.position].row);
-
-    sendMessage(currentTurn[selectedPiece.position].row, currentTurn[selectedPiece.position].col, clickedBlock.row, clickedBlock.col);
 
     var team = currentTurn,
         teamFields = json.fields;
@@ -407,7 +409,7 @@ function movePiece(clickedBlock) {
 
 	drawNewPawn();
 
-	nextTurn();
+	nextTurn(); //do usuniecia
 
 	selectedPiece = null;
 }
@@ -425,14 +427,20 @@ function checkPiece(clickedBlock) {
 
 function processMove(clickedBlock) {
     var pieceAtBlock = getPieceAtBlockForTeam(currentTurn, clickedBlock);
-    var enemyPiece = blockOccupiedByEnemy(clickedBlock);
+    var enemyPiece = blockOccupiedByEnemy(clickedBlock); //do usuniecia - serwer sprawdza
     var correctPiece = checkPiece(clickedBlock);
     
     if(pieceAtBlock !== null) {
         checkIfPieceClicked(clickedBlock);
     }
-	else if (enemyPiece === null && correctPiece) { //check movePawn in app
-		movePiece(clickedBlock);
+	else if (enemyPiece === null && correctPiece) {
+		var team = currentTurn,
+            teamFields = json.fields;
+        var newPiece = getPieceAtBlockForTeam(json.fields, clickedBlock);
+
+        sendMessage(currentTurn[selectedPiece.position].row, currentTurn[selectedPiece.position].col, clickedBlock.row, clickedBlock.col,
+            currentTurn[selectedPiece.position].sRow, currentTurn[selectedPiece.position].sCol, teamFields[newPiece.position].sRow, 
+            teamFields[newPiece.position].sCol);
 	}
 }
 
@@ -473,9 +481,6 @@ function draw() {
         currentTextColor = RED;
 
         displayTurn(); //changes html
-
-        document.getElementById("player-color").innerHTML = "BLUE (ale ruszasz się wszystkimi ;)"; //example
-        document.getElementById("player-color").style.color = BLUE;
 
 		canvas.addEventListener('click', function (ev) {
             var rect = canvas.getBoundingClientRect();
@@ -1600,12 +1605,23 @@ function defaultPositions() {
 	};
 }
 
-    var WS = window['MozWebSocket'] ? MozWebSocket : WebSocket;
-    var chatSocket = new WS("@routes.Application.game(username).webSocketURL(request)");
+var WS = window['MozWebSocket'] ? MozWebSocket : WebSocket;
+var chatSocket;
 
-    function sendMessage(oR, oC, nR, nC) {
+    if(@numberPlayers === 0) {
+        var chatSocket = new WS("@routes.Application.game(username, nameGame).webSocketURL(request)");
+    }
+    else {
+        var chatSocket = new WS("@routes.Application.gameNew(username, nameGame, numberPlayers, numberBots).webSocketURL(request)");
+    }
+
+    var nG;
+    var us;
+    var cl;
+
+    function sendMessage(oR, oC, nR, nC, osR, osC, nsR, nsC) {
         chatSocket.send(JSON.stringify(
-            {oldRow: oR, oldCol: oC, newRow: nR, newCol: nC}
+            {nameOfGame: nG, username: us, oldRow: oR, oldCol: oC, newRow: nR, newCol: nC, oldSRow: osR, oldSCol: osC, newSRow: nsR, newSCol: nsC}
         ));
     }
 
@@ -1618,16 +1634,25 @@ function defaultPositions() {
             return;
         }
 
-        var newBlock = {
-            "row": data.newRow,
-            "col": data.newCol
-        };
+        if(data.name) {
+            nG = data.name;
+            us = data.user;
+            cl = data.color;
+            document.getElementById("player-color").innerHTML = cl;
+            document.getElementById("player-color").style.color = getColor(cl);
+        }
+        else {
+            var newBlock = {
+                "row": data.newRow,
+                "col": data.newCol
+            };
 
-        var oldBlock = {
-            "row": data.oldRow,
-            "col": data.oldCol
-        };
+            var oldBlock = {
+                "row": data.oldRow,
+                "col": data.oldCol
+            };
 
-        checkIfPieceClicked(oldBlock);
-        movePieceFromAnswer(newBlock);
+            checkIfPieceClicked(oldBlock);
+            movePiece(newBlock);
+        }
     };
