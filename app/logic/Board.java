@@ -301,7 +301,7 @@ public class Board implements BoardInterface {
     private boolean checkMultiMoveIsCorrect(BoardCoordinates oldField, BoardCoordinates newField) {
         jumps = new ArrayList<>();
         
-        checkPossibleWaysForPawn(oldField.getBoardCoordinates());
+        checkPossibleWaysForPawn(oldField);
 
         for (BoardCoordinates bc : jumps) {
             if ((newField.getRow() == bc.getRow() && newField.getColumn() == bc.getColumn())) {
