@@ -38,11 +38,16 @@ public class WaitingRoom extends UntypedActor {
         String result = (String)Await.result(ask(defaultRoom, new Join(username, out), 1000), Duration.create(1, SECONDS));
 
         if("OK".equals(result)) {
-            if(isNewGame) {
+            if(isNewGame && !games.containsKey(nameGame)) {
                 ActorRef newGame = Akka.system().actorOf(Props.create(GameRoom.class));
                 games.put(nameGame, newGame);
                 newGame.tell(new GameRoom.Making(nameGame, players, bots), null);
                 newGame.tell(new GameRoom.Join(username, members.get(username)), null);
+            }
+            else if(isNewGame && games.containsKey(nameGame)) {
+                ObjectNode event = Json.newObject();
+                event.put("error", "This name of game was used. You'll back to home page.");
+                out.write(event);
             }
             else {
                 ActorRef currentGame = games.get(nameGame);
@@ -55,17 +60,12 @@ public class WaitingRoom extends UntypedActor {
                     if(event.has("nameOfGame") && games.containsKey(event.get("nameOfGame").toString().replace("\"", "")) &&
                                 event.has("skipTurn")) {
                         ActorRef currentGame = games.get(event.get("nameOfGame").toString().replace("\"", ""));
-                        currentGame.tell(new GameRoom.Skip(username), null);
+                        currentGame.tell(new GameRoom.Skip(username, event.get("color").toString().replace("\"", "")), null);
                     }
                     else if(event.has("nameOfGame") && games.containsKey(event.get("nameOfGame").toString().replace("\"", ""))) {
                         ActorRef currentGame = games.get(event.get("nameOfGame").toString().replace("\"", ""));
                         currentGame.tell(new GameRoom.Move(username, event.get("oldRow").asInt(), event.get("oldCol").asInt(),
                             event.get("newRow").asInt(), event.get("newCol").asInt()), null);
-                    }
-                    else if(event.has("nameOfGame") && games.containsKey(event.get("nameOfGame").toString()) &&
-                                event.has("quit")) {
-                        ActorRef currentGame = games.get(event.get("nameOfGame").toString());
-                        currentGame.tell(new GameRoom.Quit(username), null);
                     }
                 }
             });
@@ -74,10 +74,9 @@ public class WaitingRoom extends UntypedActor {
             in.onClose(new Callback0() {
                 public void invoke() {
 
-                    // Send a Quit message to the room.
-                    //TODO: send all of games info about quit of player
-                    defaultRoom.tell(new Quit(username), null);
-
+                    ActorRef currentGame = games.get(nameGame);
+                    currentGame.tell(new GameRoom.Quit(username), defaultRoom);
+                    defaultRoom.tell(new Quit(nameGame, username), null);
                 }
             });
 
@@ -100,35 +99,29 @@ public class WaitingRoom extends UntypedActor {
     public void onReceive(Object message) throws Exception {
 
         if(message instanceof Join) {
+            Join join = (Join) message;
 
-            // Received a Join message
-            Join join = (Join)message;
-
-            // Check if this username is free.
             if(members.containsKey(join.username)) {
-                getSender().tell("This username is already used", getSelf());
+                getSender().tell("This username is already used. You'll back to home page.", getSelf());
             } else {
                 members.put(join.username, join.channel);
                 getSender().tell("OK", getSelf());
             }
 
-        } else if(message instanceof Move)  {
-
-            // Received a Talk message
-            Move move = (Move)message;
-
-            notifyAll("move", move.username, move.oldRow, move.oldCol, move.newRow, move.newCol);
-
-        } else if(message instanceof Quit)  {
-
-            // Received a Quit message
-            Quit quit = (Quit)message;
+        }
+        else if(message instanceof Quit)  {
+            Quit quit = (Quit) message;
 
             members.remove(quit.username);
+            games.remove(quit.nameOfGame);
 
-            //notifyAll("quit", quit.username, "has left the room");
+        } 
+        else if(message instanceof RemovalPlayer) {
+            RemovalPlayer removal = (RemovalPlayer) message;
 
-        } else {
+            members.remove(removal.username);
+        }
+        else {
             unhandled(message);
         }
 
@@ -142,29 +135,6 @@ public class WaitingRoom extends UntypedActor {
         newJSON += "]}";
         return newJSON;
     }
-
-    // Send a Json event to all members
-    public void notifyAll(String kind, String user, int oldRow, int oldCol, int newRow, int newCol) {
-        for(WebSocket.Out<JsonNode> channel: members.values()) {
-
-            ObjectNode event = Json.newObject();
-            event.put("kind", kind);
-            event.put("user", user);
-            event.put("oldRow", oldRow);
-            event.put("oldCol", oldCol);
-            event.put("newRow", newRow);
-            event.put("newCol", newCol);
-
-            ArrayNode m = event.putArray("members");
-            for(String u: members.keySet()) {
-                m.add(u);
-            }
-
-            channel.write(event);
-        }
-    }
-
-    // -- Messages
 
     public static class Join {
 
@@ -197,13 +167,21 @@ public class WaitingRoom extends UntypedActor {
     }
 
     public static class Quit {
-
+        final String nameOfGame;
         final String username;
 
-        public Quit(String username) {
+        public Quit(String nameOfGame, String username) {
+            this.nameOfGame = nameOfGame;
             this.username = username;
         }
 
     }
 
+    public static class RemovalPlayer {
+        final String username;
+
+        public RemovalPlayer(String username) {
+            this.username = username;
+        }
+    }
 }

@@ -10,7 +10,8 @@ var RED = '#FB4357',
     YELLOW = '#f2de16';
     ORANGE = '#F4762A';
     BLACK = '#071E22';
-    NEUTRAL = '#fffdf7 ';
+    NEUTRAL = '#fffdf7';
+    WARNING = '#ff1717';
 
 var ctx = null,
 	json = null,
@@ -58,31 +59,6 @@ function getPieceAtBlockForTeam(teamOfPieces, clickedBlock) {
 	}
 
 	return pieceAtBlock;
-}
-
-function blockOccupiedByEnemy(clickedBlock) { //do usuniecia
-    var occupiedPiece = null;
-
-	if(currentTurn !== json.red) {
-        occupiedPiece = getPieceAtBlockForTeam(json.red, clickedBlock);
-    }
-    if(occupiedPiece === null && currentTurn != json.black) {
-        occupiedPiece = getPieceAtBlockForTeam(json.black, clickedBlock);
-    }
-    if(occupiedPiece === null && currentTurn != json.blue) {
-        occupiedPiece = getPieceAtBlockForTeam(json.blue, clickedBlock);
-    }
-    if(occupiedPiece === null && currentTurn != json.yellow) {
-        occupiedPiece = getPieceAtBlockForTeam(json.yellow, clickedBlock);
-    }
-    if(occupiedPiece === null && currentTurn != json.orange) {
-        occupiedPiece = getPieceAtBlockForTeam(json.orange, clickedBlock);
-    }
-    if(occupiedPiece === null && currentTurn != json.green) {
-        occupiedPiece = getPieceAtBlockForTeam(json.green, clickedBlock);
-    }
-
-	return occupiedPiece;
 }
 
 function getBlockColour(iRowCounter, iBlockCounter) {
@@ -186,12 +162,29 @@ function drawTeamOfPieces(teamOfPieces) {
 }
 
 function drawPieces() {
-	drawTeamOfPieces(json.red);
-    drawTeamOfPieces(json.black);
-    drawTeamOfPieces(json.blue);
-    drawTeamOfPieces(json.yellow);
-    drawTeamOfPieces(json.green);
-    drawTeamOfPieces(json.orange);
+    if(nP === 2) {
+        drawTeamOfPieces(json.red);
+        drawTeamOfPieces(json.yellow);
+    }
+    else if(nP === 3) {
+        drawTeamOfPieces(json.red);
+        drawTeamOfPieces(json.blue);
+        drawTeamOfPieces(json.orange);
+    }
+    else if(nP === 4) {
+        drawTeamOfPieces(json.black);
+        drawTeamOfPieces(json.blue);
+        drawTeamOfPieces(json.green);
+        drawTeamOfPieces(json.orange);
+    }
+    else {
+        drawTeamOfPieces(json.red);
+        drawTeamOfPieces(json.black);
+        drawTeamOfPieces(json.blue);
+        drawTeamOfPieces(json.yellow);
+        drawTeamOfPieces(json.green);
+        drawTeamOfPieces(json.orange);
+    }
 }
 
 function drawRow(iRowCounter) {
@@ -339,39 +332,25 @@ function drawNewPawn() {
     }
 }
 
-function nextTurn() { //do usuniecia - serwer bedzie wysylal info z tura
-    if(currentTurn === json.red) {
-        currentTurn = json.green;
-        currentColor = "GREEN";
-        currentTextColor = GREEN;
+function getTurn(newTurn) {
+    if(newTurn === "red") {
+        return json.red;
     }
-    else if(currentTurn === json.green) {
-        currentTurn = json.blue;
-        currentColor = "BLUE";
-        currentTextColor = BLUE;
+    else if(newTurn === "green") {
+        return json.green;
     }
-    else if(currentTurn === json.blue) {
-        currentTurn = json.yellow;
-        currentColor = "YELLOW";
-        currentTextColor = YELLOW;
+    else if(newTurn === "blue") {
+        return json.blue;
     }
-    else if(currentTurn === json.yellow) {
-        currentTurn = json.orange;
-        currentColor = "ORANGE";
-        currentTextColor = ORANGE
+    else if(newTurn === "black") {
+        return json.black;
     }
-    else if(currentTurn === json.orange) {
-        currentTurn = json.black;
-        currentColor = "BLACK";
-        currentTextColor = BLACK;
+    else if(newTurn === "yellow") {
+        return json.yellow;
     }
-    else if(currentTurn === json.black) {
-        currentTurn = json.red;
-        currentColor = "RED";
-        currentTextColor = RED;
+    else if(newTurn === "orange") {
+        return json.orange;
     }
-
-    displayTurn();
 }
 
 function getColor(colorText) {
@@ -409,8 +388,6 @@ function movePiece(clickedBlock) {
 
 	drawNewPawn();
 
-	nextTurn(); //do usuniecia
-
 	selectedPiece = null;
 }
 
@@ -427,20 +404,18 @@ function checkPiece(clickedBlock) {
 
 function processMove(clickedBlock) {
     var pieceAtBlock = getPieceAtBlockForTeam(currentTurn, clickedBlock);
-    var enemyPiece = blockOccupiedByEnemy(clickedBlock); //do usuniecia - serwer sprawdza
     var correctPiece = checkPiece(clickedBlock);
     
     if(pieceAtBlock !== null) {
         checkIfPieceClicked(clickedBlock);
     }
-	else if (enemyPiece === null && correctPiece) {
+	else if (correctPiece) {
 		var team = currentTurn,
             teamFields = json.fields;
         var newPiece = getPieceAtBlockForTeam(json.fields, clickedBlock);
 
-        sendMessage(currentTurn[selectedPiece.position].row, currentTurn[selectedPiece.position].col, clickedBlock.row, clickedBlock.col,
-            currentTurn[selectedPiece.position].sRow, currentTurn[selectedPiece.position].sCol, teamFields[newPiece.position].sRow, 
-            teamFields[newPiece.position].sCol);
+        sendMessage(currentTurn[selectedPiece.position].sRow, currentTurn[selectedPiece.position].sCol, 
+            teamFields[newPiece.position].sRow, teamFields[newPiece.position].sCol);
 	}
 }
 
@@ -456,11 +431,6 @@ function board_click(ev, rect) {
 	}
 }
 
-function displayTurn() {
-    document.getElementById("turn-info").innerHTML = currentColor;
-    document.getElementById("turn-info").style.color = currentTextColor;
-}
-
 /* first method - onload in html */
 function draw() {
 	canvas = document.getElementById('chess');
@@ -473,14 +443,6 @@ function draw() {
 		drawBoard(); //draws board without pawns
 
 		defaultPositions(); //creates json
-
-        drawPieces(); //draws pawns
-        
-        currentTurn = json.red; //it's an example
-        currentColor = "RED";
-        currentTextColor = RED;
-
-        displayTurn(); //changes html
 
 		canvas.addEventListener('click', function (ev) {
             var rect = canvas.getBoundingClientRect();
@@ -818,7 +780,7 @@ function defaultPositions() {
                 {
 					"row": 7,
                     "col": 8,
-                    "sRow": 9,
+                    "sRow": 8,
                     "sCol": 11,
                 },
                 {
@@ -1605,6 +1567,26 @@ function defaultPositions() {
 	};
 }
 
+function findFieldByS(osR, osC) {
+    var curPiece = null,
+		iPieceCounter = 0,
+        pieceAtBlock = null
+        teamOfPieces = json.fields;
+
+	for (iPieceCounter = 0; iPieceCounter < teamOfPieces.length; iPieceCounter++) {
+
+		curPiece = teamOfPieces[iPieceCounter];
+
+		if (curPiece.sCol === osC && curPiece.sRow === osR) {
+            curPiece.position = iPieceCounter;
+			pieceAtBlock = curPiece;
+			iPieceCounter = teamOfPieces.length;
+		}
+	}
+
+	return pieceAtBlock;
+}
+
 var WS = window['MozWebSocket'] ? MozWebSocket : WebSocket;
 var chatSocket;
 
@@ -1618,41 +1600,73 @@ var chatSocket;
     var nG;
     var us;
     var cl;
+    var nP;
 
-    function sendMessage(oR, oC, nR, nC, osR, osC, nsR, nsC) {
+    function sendMessage(osR, osC, nsR, nsC) {
         chatSocket.send(JSON.stringify(
-            {nameOfGame: nG, username: us, oldRow: oR, oldCol: oC, newRow: nR, newCol: nC, oldSRow: osR, oldSCol: osC, newSRow: nsR, newSCol: nsC}
+            {nameOfGame: nG, username: us, color: cl, oldRow: osR, oldCol: osC, newRow: nsR, newCol: nsC}
         ));
+    }
+
+    function skipTurn() {
+        var cT = document.getElementById("turn-info").textContent;
+        if(cT.localeCompare(cl) === 0) {
+            chatSocket.send(JSON.stringify(
+                {nameOfGame: nG, username: us, color: cl, skipTurn: "true"}
+            ));
+        }
     }
 
     chatSocket.onmessage = function (event) {
         var data = JSON.parse(event.data);
 
-        // Handle errors
         if (data.error) {
+            alert(data.error);
             chatSocket.close();
-            return;
+            window.location.href = "/";
         }
-
-        if(data.name) {
+        else if(data.name) {
             nG = data.name;
             us = data.user;
             cl = data.color;
+            nP = data.numberOfPlayers;
             document.getElementById("player-color").innerHTML = cl;
             document.getElementById("player-color").style.color = getColor(cl);
+            document.getElementById("turn-info").innerHTML = "WAIT FOR PLAYERS";
+            document.getElementById("turn-info").style.color = WARNING;
         }
-        else {
+        else if(data.kind === "start") {
+            drawPieces();
+            currentTurn = getTurn(data.turn);
+            document.getElementById("turn-info").innerHTML = data.turn;
+            document.getElementById("turn-info").style.color = getColor(data.turn);
+        }
+        else if(data.kind === "skipTurn") {
+            currentTurn = getTurn(data.turn);
+            document.getElementById("turn-info").innerHTML = data.turn;
+            document.getElementById("turn-info").style.color = getColor(data.turn);
+        }
+        else if(data.kind === "move") {
+            var newSBlock = findFieldByS(data.newRow, data.newCol),
+                oldSBlock = findFieldByS(data.oldRow, data.oldCol);
+
             var newBlock = {
-                "row": data.newRow,
-                "col": data.newCol
+                "row": newSBlock.row,
+                "col": newSBlock.col
             };
 
             var oldBlock = {
-                "row": data.oldRow,
-                "col": data.oldCol
+                "row": oldSBlock.row,
+                "col": oldSBlock.col
             };
 
             checkIfPieceClicked(oldBlock);
             movePiece(newBlock);
+            currentTurn = getTurn(data.turn);
+            document.getElementById("turn-info").innerHTML = data.turn;
+            document.getElementById("turn-info").style.color = getColor(data.turn);
+        }
+        else if(data.kind === "winner") {
+            alert("Player " + data.user + " (" + data.turn + ") has all pawns in the correct base!");
         }
     };

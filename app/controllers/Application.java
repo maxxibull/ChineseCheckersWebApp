@@ -2,14 +2,14 @@ package controllers;
 
 import play.*;
 import play.mvc.*;
-
 import views.html.*;
-
 import com.fasterxml.jackson.databind.JsonNode;
 import models.*;
 
+/**
+ * This class is the main controller of all users' queries and calls.
+ */
 public class Application extends Controller {
-
     public static Result index() {
         return ok(index.render());
     }
