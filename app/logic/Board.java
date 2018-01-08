@@ -313,76 +313,18 @@ public class Board implements BoardInterface {
     }
 
     /**
-     * Looks for the pawns which are located nearby the pawn that is chosen to be the closest to the enemy's base.
-     * This ensures that the bot behaviour is more random, and thus less predictable for the player.
-     * @param playerPawnsCoordinates
-     * @param candidatesToMove
-     * @param column
-     * @param row
-     */
-    private ArrayList<BoardCoordinates> findNearbyPawns(ArrayList<BoardCoordinates> playerPawnsCoordinates, ArrayList<BoardCoordinates> candidatesToMove, int column, int row) {
-        int radius = 1;
-
-        do {
-            for (BoardCoordinates coordinate : playerPawnsCoordinates) {
-                if(Math.abs(coordinate.getColumn() - column) == radius && Math.abs(coordinate.getRow() - row) == radius) {
-                    candidatesToMove.add(coordinate);
-                    System.out.println(coordinate.getRow() + ", " + coordinate.getColumn());
-                }
-                else if(Math.abs(coordinate.getColumn() - column) == radius && Math.abs(coordinate.getRow() - row) == 0) {
-                    candidatesToMove.add(coordinate);
-                    System.out.println(coordinate.getRow() + ", " + coordinate.getColumn());
-                }
-                else if(Math.abs(coordinate.getRow() - row) == radius && Math.abs(coordinate.getColumn() - column) == 0) {
-                    candidatesToMove.add(coordinate);
-                    System.out.println(coordinate.getRow() + ", " + coordinate.getColumn());
-                }
-                
-                /*if (coordinate.getRow() == (row - radius)) {
-                    if(coordinate.getColumn() == column || coordinate.getColumn() == (column - radius) || coordinate.getColumn() == (column + radius)) {
-                        candidatesToMove.add(coordinate);
-                        continue;
-                    }
-                if(coordinate.getRow() == (row + radius)) {
-                    if(coordinate.getColumn() == column || coordinate.getColumn() == (column - radius) || coordinate.getColumn() == (column + radius)) {
-                        candidatesToMove.add(coordinate);
-                        continue;
-                    }
-                if(coordinate.getRow() == row) {
-                    if(coordinate.getColumn() == (column - radius) || coordinate.getColumn() == (column + radius)) {
-                        candidatesToMove.add(coordinate);
-                        continue;
-                    }
-                }*/
-            }
-            radius++;
-
-        } while (candidatesToMove.size() < 4 && radius < 20);
-        System.out.println("findnearbyByPawns" + candidatesToMove.size());
-
-        return candidatesToMove;
-    }
-
-    /**
      * Checks if pawns which are the candidates for our move are not blocked by other pawns, meaning that they would be unable to move.
+     * 
      * @param candidatesToMove
      */
-    private Map<BoardCoordinates, ArrayList<BoardCoordinates>>
-        getCandidatesWhichCanMoveInDesiredDirectionOnly(ArrayList<BoardCoordinates> candidatesToMove, Color playerColor)
+    private Map<BoardCoordinates, ArrayList<BoardCoordinates>> getCandidatesWhichCanMoveInDesiredDirectionOnly(ArrayList<BoardCoordinates> candidatesToMove, Color playerColor)
         throws WrongPawnColorException {
-
-            System.out.println("getCandidatesWhichCanMoveInDesiredDirectionOnly");
 
         // Bots with these colors will increase their row and/or column on move.
         // Hence, we'll check if the moves where these values change are correct.
-
         // Note that we assume here that the bot's pawn will move no more than once using the multi-move trick.
-        // TODO: We don't want to be too ambitious or something here, and most games don't even allow multi-multi move.
 
         int single_dxdy[][], multi_dxdy[][];
-
-        //ArrayList<BoardCoordinates> desiredCoorinatesToMoveInMultiMoveOnly = new ArrayList<BoardCoordinates>();
-        //ArrayList<BoardCoordinates> desiredCoordinatesToMoveInSingleMoveOnly = new ArrayList<BoardCoordinates>();
 
         Map<BoardCoordinates, ArrayList<BoardCoordinates>> coordinatesWithPositionsToMoveTo = new HashMap<>();
 
@@ -405,21 +347,7 @@ public class Board implements BoardInterface {
         else
             throw new WrongPawnColorException();
 
-//        System.out.println("multi dx array:");
-//        for (int [] delta: multi_dxdy) {
-//            System.out.println("dx = " + delta[0] + ", dy = " + delta[1]);
-//        }
-//
-//        int i = 0;
-//
-//        for (BoardCoordinates candidate: candidatesToMove) {
-//            System.out.println(i + ") row: " + candidate.getRow() + ", column: " + candidate.getColumn());
-//            i++;
-//        }
-
-
         for (BoardCoordinates candidate: candidatesToMove) {
-
             ArrayList<BoardCoordinates> currentPawnWaysForMultiMove = new ArrayList<>();
             ArrayList<BoardCoordinates> currentPawnWaysForSingleMove = new ArrayList<>();
 
@@ -448,133 +376,11 @@ public class Board implements BoardInterface {
                 }
             }
 
-            System.out.println("getCandidatesWhichCanMoveInDesiredDirectionOnly");
-
             // Add all possible multi moves to the hashmap.
             if (currentPawnWaysForMultiMove.size() != 0)
                 coordinatesWithPositionsToMoveTo.put(candidate, currentPawnWaysForMultiMove);
         }
         return coordinatesWithPositionsToMoveTo;
-    }
-
-    private ArrayList<BoardCoordinates> getCoordinatesOfPawnsClosestToTheEnemyBaseByColor(Color playerColor) {
-        System.out.println("getCoordinatesOfPawnsClosest....");
-
-        ArrayList<BoardCoordinates> playerPawnsCoordinates = getCoordinatesOfAllPawnsOfColor(playerColor),
-                candidatesToMove = new ArrayList<>();
-        int column = 0, row = 0;
-
-        if (playerColor == Color.Red || playerColor == Color.Black) {
-            // Yellow/blue is the enemy we're concerned with, since the bot does not attack others
-
-            // First, find the red/black pawn that's the closest to the yellow pawn
-
-            for (BoardCoordinates coordinate: playerPawnsCoordinates) {
-                int coordinateColumn = coordinate.getColumn(),
-                        coordinateRow = coordinate.getRow();
-
-                if (coordinateRow > row || coordinateColumn > column) {
-                    // It will be random in choosing whether it will be the max from column or max from row,
-                    // depending on what order the pawn will be chosen.
-                    column = coordinateColumn;
-                    row = coordinateRow;
-                }
-            }
-
-            candidatesToMove.add(new BoardCoordinates(row, column));
-
-            // Find some pawns nearby to the furthest-placed one
-            candidatesToMove = findNearbyPawns(playerPawnsCoordinates, candidatesToMove, column, row);
-
-            // Return the pawns found
-            return candidatesToMove;
-        }
-        else if (playerColor == Color.Yellow || playerColor == Color.Blue) {
-            // Red/black is the enemy we're concerned with.
-            // Start by finding the yellow/blue pawn closest to the red base.
-
-            // Get a first player pawn
-            row = playerPawnsCoordinates.get(0).getRow();
-            column = playerPawnsCoordinates.get(0).getColumn();
-
-            // If a pawn is found with lesser coordinates, set it as a maximum
-
-            for (BoardCoordinates coordinate: playerPawnsCoordinates) {
-                int coordinateColumn = coordinate.getColumn(),
-                        coordinateRow = coordinate.getRow();
-
-                if (coordinateRow < row || coordinateColumn < column) {
-                    row = coordinateRow;
-                    column = coordinateColumn;
-                }
-            }
-
-            //System.out.println("Max pawn row: " + row + ", column: " + column);
-            candidatesToMove.add(new BoardCoordinates(row, column));
-
-            // Find some pawns nearby to the furthest-placed one
-            candidatesToMove = findNearbyPawns(playerPawnsCoordinates, candidatesToMove, column, row);
-
-            // Return the pawns found
-            return candidatesToMove;
-        }
-        else if (playerColor == Color.Orange) {
-            // Green is the enemy we're concerned with
-            // Firstly, let's find the orange pawn that's closest to the enemy's base
-
-            row = playerPawnsCoordinates.get(0).getRow();
-            column = playerPawnsCoordinates.get(0).getColumn();
-
-            for (BoardCoordinates coordinate: playerPawnsCoordinates) {
-                int coordinateColumn = coordinate.getColumn(),
-                        coordinateRow = coordinate.getRow();
-
-                if (coordinateColumn > column) {
-                    row = coordinateRow;
-                    column = coordinateColumn;
-                }
-            }
-
-            //System.out.println("Max pawn row: " + row + ", column: " + column);
-            candidatesToMove.add(new BoardCoordinates(row, column));
-
-            // Find some pawns nearby to the furthest-placed one
-            candidatesToMove = findNearbyPawns(playerPawnsCoordinates, candidatesToMove, column, row);
-
-            // Return the pawns found
-            return candidatesToMove;
-        }
-        else if (playerColor == Color.Green) {
-            // Orange is the enemy we're concerned with
-            // Firstly, let's find the green pawn that's closest to the enemy's base
-
-            row = playerPawnsCoordinates.get(0).getRow();
-            column = playerPawnsCoordinates.get(0).getColumn();
-
-            for (BoardCoordinates coordinate: playerPawnsCoordinates) {
-                int coordinateColumn = coordinate.getColumn(),
-                        coordinateRow = coordinate.getRow();
-
-                if (coordinateColumn < column) {
-                    row = coordinateRow;
-                    column = coordinateColumn;
-                }
-            }
-
-            //System.out.println("Max pawn row: " + row + ", column: " + column);
-            candidatesToMove.add(new BoardCoordinates(row, column));
-
-            // Find some pawns nearby to the furthest-placed one
-            candidatesToMove = findNearbyPawns(playerPawnsCoordinates, candidatesToMove, column, row);
-
-            System.out.println("getCoordinatesOfPawnsClosest....");
-            // Return the pawns found
-            return candidatesToMove;
-        }
-        else {
-            System.out.println("getCoordinatesOfPawnsClosest....");
-            return null;
-        }
     }
 
     /**
@@ -587,18 +393,13 @@ public class Board implements BoardInterface {
         ArrayList<BoardCoordinates> move = new ArrayList<>();
 
         try {
-            // Color of the bot
             Color botColor = bot.getColor();
 
             // Get the list of pawns we'll be chosing from.
-            ArrayList<BoardCoordinates> pawnsToChooseFrom = getCoordinatesOfPawnsClosestToTheEnemyBaseByColor(botColor);
-            //System.out.println("Pawns we're chosing from:\n" + pawnsToChooseFrom);
+            ArrayList<BoardCoordinates> pawnsToChooseFrom = getCoordinatesOfAllPawnsOfColor(botColor);
 
             // Get the hashmap of pawns associated with the best possible directions to move to for a given color.
             Map<BoardCoordinates, ArrayList<BoardCoordinates>> mapOfPawnsToMove = getCandidatesWhichCanMoveInDesiredDirectionOnly(pawnsToChooseFrom, botColor);
-
-            //System.out.println("Current hashmap:");
-            //System.out.println(mapOfPawnsToMove);
 
             // Randomly chose the pawn that will be moved from the generated hashmap.
             Random generator = new Random();
@@ -607,25 +408,13 @@ public class Board implements BoardInterface {
 
             move.add(0, pawnChosen);
 
-            System.out.println("Chosen pawn row: " + pawnChosen.getRow() + ", column: " + pawnChosen.getColumn());
-
             // Get the coordinates to which it's possible to move the chosen pawn.
             ArrayList<BoardCoordinates> possibileCoordinatesToMoveChosenPawn = mapOfPawnsToMove.get(pawnChosen);
-
-            //System.out.println("Coordinates possible to move:\n" + possibileCoordinatesToMoveChosenPawn);
 
             // Now, yet again randomly choose where shall we move it!
             BoardCoordinates newChosenPawnPosition = possibileCoordinatesToMoveChosenPawn.get(generator.nextInt(possibileCoordinatesToMoveChosenPawn.size()));
 
             move.add(1, newChosenPawnPosition);
-
-            // Finally(!) move the pawn there.
-            //movePawnToNewField(pawnChosen, newChosenPawnPosition); faaaaaaaaaaaaaaaak ile czasu stracilem na to 
-
-            System.out.println("New pawn position row: " + newChosenPawnPosition.getRow() + ", column: " + newChosenPawnPosition.getColumn());
-
-            // Jupijajej maderfaker.
-
         }
         catch (WrongPawnColorException ex) {
             System.out.printf("Provided color: " + bot.getColor().toString() + "is wrong.");
@@ -635,8 +424,8 @@ public class Board implements BoardInterface {
         return move;
     }
 
+    // return coordinates of all pawns of color
     private ArrayList<BoardCoordinates> getCoordinatesOfAllPawnsOfColor(Color playerColor) {
-
         ArrayList<BoardCoordinates> allPawns = getPawnsCoordinates();
         ArrayList<BoardCoordinates> pawnsOfChosenColor = new ArrayList<>();
 

@@ -14,15 +14,19 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import java.util.*;
 import static java.util.concurrent.TimeUnit.*;
 
+/**
+ * An actor class for the game. It control players, their movements, turn etc.
+ */
 public class GameRoom extends UntypedActor {
-    private Map<String, WebSocket.Out<JsonNode>> members = new HashMap<String, WebSocket.Out<JsonNode>>();
-    private Map<String, Player> players = new HashMap<String, Player>();
-    private Making info;
-    private ArrayList<String> colors;
-    private int playersInGame = 0;
-    private Board board;
-    private LinkedList<String> currentTurn;
+    private Map<String, WebSocket.Out<JsonNode>> members = new HashMap<String, WebSocket.Out<JsonNode>>(); // websockets
+    private Map<String, Player> players = new HashMap<String, Player>(); // players
+    private Making info; // info about the game - name, number of players and bots
+    private ArrayList<String> colors; // colors in the game
+    private int playersInGame = 0; // current number of players
+    private Board board; // board for the game
+    private LinkedList<String> currentTurn; // ordered list of colors
 
+    // choose colors in comparision to number of players
     private void chooseColors(int numberOfPlayers) {
         colors = new ArrayList<>();
         currentTurn = new LinkedList<>();
@@ -66,10 +70,11 @@ public class GameRoom extends UntypedActor {
                 currentTurn.addLast("black");
         }
         for(int i = 0; i < 20; i++) {
-            Collections.shuffle(colors);
+            Collections.shuffle(colors); // shuffling is for random color of player
         }
     }
 
+    // convert string into Color object
     private Color getColorAsEnum(String color) {
         switch(color) {
             case "green":
@@ -89,6 +94,7 @@ public class GameRoom extends UntypedActor {
         }
     }
 
+    // create appropriate number of bots
     private void createBots() {
         for(int i = 0; i < info.numberOfBots; i++) {
             players.put("Bot" + i, new Player(getColorAsEnum(colors.get(playersInGame)), "Bot" + i, true));
@@ -96,6 +102,7 @@ public class GameRoom extends UntypedActor {
         }
     }
 
+    // check that next turn is bot's turn
     private Player checkNextTurnIsBot() {
         Player bot = null;
 
@@ -109,8 +116,20 @@ public class GameRoom extends UntypedActor {
         return bot;
     }
 
+    // perform bot move if its turn
+    private void performBotMoveIfItsTurn() {
+        Player bot = checkNextTurnIsBot();
+
+        if(bot != null) {
+            ArrayList<BoardCoordinates> makeMove = board.performBotMove(bot);
+            getSelf().tell(new Move(bot.getUsername(), makeMove.get(0).getRow(), makeMove.get(0).getColumn(),
+                    makeMove.get(1).getRow(), makeMove.get(1).getColumn()), null);
+        }
+    }
+
+    @Override
     public void onReceive(Object message) throws Exception {
-        if(message instanceof Making) {
+        if(message instanceof Making) { // makes new game
             Making making = (Making) message;
             info = making;
             board = new Board(info.numberOfPlayers);
@@ -120,7 +139,7 @@ public class GameRoom extends UntypedActor {
                 createBots();
             }
         }
-        else if(message instanceof Join) {
+        else if(message instanceof Join) { // adds players to game
             if(playersInGame < info.numberOfPlayers) {
                 Join join = (Join) message;
                 members.put(join.username, join.channel);
@@ -134,16 +153,12 @@ public class GameRoom extends UntypedActor {
 
                 players.put(join.username, new Player(getColorAsEnum(colors.get(playersInGame)), join.username, false));
                 playersInGame++;
+
                 if(playersInGame == info.numberOfPlayers) {
+                    getSender().tell(new WaitingRoom.Full(info.name), null);
                     notifyAll("start", currentTurn.getFirst(), "server", 0, 0, 0, 0);
 
-                    Player bot = checkNextTurnIsBot();
-
-                    if(bot != null) {
-                        ArrayList<BoardCoordinates> makeMove = board.performBotMove(bot);
-                        getSelf().tell(new Move(bot.getUsername(), makeMove.get(0).getRow(), makeMove.get(0).getColumn(),
-                                    makeMove.get(1).getRow(), makeMove.get(1).getColumn()), null);
-                    }
+                    performBotMoveIfItsTurn();
                 }
             } 
             else {
@@ -151,39 +166,35 @@ public class GameRoom extends UntypedActor {
                 ObjectNode event = Json.newObject();
                 event.put("error", "Too many players in the game. You'll back to home page.");
                 join.channel.write(event);
+                getSender().tell(new WaitingRoom.RemovalPlayer(join.username), null);
             }
         } 
-        else if(message instanceof Move)  {
-            Move move = (Move) message;
-            System.out.println(move.oldCol  + ", " + move.oldRow  + ", " + move.newRow + ", " + move.newCol);
+        else if(message instanceof Move) { // makes move
+            Move move = (Move) message;   
+            Player bot = checkNextTurnIsBot();
 
             try {
                 board.movePawn(new BoardCoordinates(move.oldRow, move.oldCol), new BoardCoordinates(move.newRow, move.newCol), 
                             players.get(move.username));
-
-
+    
                 if(!board.checkIfThePlayerIsAWinner(players.get(move.username))) {
                     currentTurn.offerLast(currentTurn.getFirst());
                 }
                 else {
                     notifyAll("winner", currentTurn.getFirst(), move.username, 0, 0, 0, 0);
                 }
-
+    
                 currentTurn.removeFirst();
                 notifyAll("move", currentTurn.getFirst(), move.username, move.oldRow, move.oldCol, move.newRow, move.newCol);
-
-                Player bot = checkNextTurnIsBot();
-
-                if(bot != null) {
-                    ArrayList<BoardCoordinates> makeMove = board.performBotMove(bot);
-                    getSelf().tell(new Move(bot.getUsername(), makeMove.get(0).getRow(), makeMove.get(0).getColumn(),
-                                makeMove.get(1).getRow(), makeMove.get(1).getColumn()), null);
-                }
+    
+                performBotMoveIfItsTurn();
             } catch(Exception ex) {
-                ex.printStackTrace();
+                if(bot != null) {
+                    getSelf().tell(new Skip(bot.getUsername(), currentTurn.getFirst()), null);
+                }
             }
         } 
-        else if(message instanceof Skip) {
+        else if(message instanceof Skip) { // receive and send info about skipping turn
             Skip skip = (Skip) message;
             
             if(currentTurn.getFirst().equals(skip.color)) {
@@ -191,8 +202,10 @@ public class GameRoom extends UntypedActor {
                 currentTurn.removeFirst();
                 notifyAll("skipTurn", currentTurn.getFirst(), skip.username, 0, 0, 0, 0);
             }
+
+            performBotMoveIfItsTurn();
         }
-        else if(message instanceof Quit)  {
+        else if(message instanceof Quit)  { //ends game if user left it
             Quit quit = (Quit) message;
             
             if(members.containsKey(quit.username)) {
@@ -209,18 +222,19 @@ public class GameRoom extends UntypedActor {
 
     }
 
-    public void sendError(String message) {
+    // sends error to all members
+    private void sendError(String message) {
         ObjectNode event = Json.newObject();
         event.put("error", message);
+
         for(WebSocket.Out<JsonNode> channel: members.values()) {
             channel.write(event);
         }
     }
 
-    // Send a Json event to all members
-    public void notifyAll(String kind, String turn, String user, int oldRow, int oldCol, int newRow, int newCol) {
+    // sends a Json event to all members
+    private void notifyAll(String kind, String turn, String user, int oldRow, int oldCol, int newRow, int newCol) {
         for(WebSocket.Out<JsonNode> channel: members.values()) {
-
             ObjectNode event = Json.newObject();
             event.put("kind", kind);
             event.put("turn", turn);
@@ -229,15 +243,11 @@ public class GameRoom extends UntypedActor {
             event.put("oldCol", oldCol);
             event.put("newRow", newRow);
             event.put("newCol", newCol);
-
-            /*ArrayNode m = event.putArray("members");
-            for(String u: members.keySet()) {
-                m.add(u);
-            }*/
-
             channel.write(event);
         }
     }
+
+    // Protocol - classes are used to communicate between actors
 
     public static class Making {
 

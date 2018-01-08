@@ -19,7 +19,111 @@ var ctx = null,
     currentTurn = null,
     currentColor = null,
     currentTextColor = null,
-	selectedPiece = null;
+    selectedPiece = null;
+    
+    function findFieldByS(osR, osC) {
+        var curPiece = null,
+            iPieceCounter = 0,
+            pieceAtBlock = null
+            teamOfPieces = json.fields;
+    
+        for (iPieceCounter = 0; iPieceCounter < teamOfPieces.length; iPieceCounter++) {
+    
+            curPiece = teamOfPieces[iPieceCounter];
+    
+            if (curPiece.sCol === osC && curPiece.sRow === osR) {
+                curPiece.position = iPieceCounter;
+                pieceAtBlock = curPiece;
+                iPieceCounter = teamOfPieces.length;
+            }
+        }
+    
+        return pieceAtBlock;
+    }
+    
+    var WS = window['MozWebSocket'] ? MozWebSocket : WebSocket;
+    var chatSocket;
+    
+    if(@numberPlayers === 0) {
+        var chatSocket = new WS("@routes.Application.game(username, nameGame).webSocketURL(request)");
+    }
+    else {
+        var chatSocket = new WS("@routes.Application.gameNew(username, nameGame, numberPlayers, numberBots).webSocketURL(request)");
+    }
+    
+    var nG;
+    var us;
+    var cl;
+    var nP;
+    
+    function sendMessage(osR, osC, nsR, nsC) {
+        chatSocket.send(JSON.stringify(
+            {nameOfGame: nG, username: us, color: cl, oldRow: osR, oldCol: osC, newRow: nsR, newCol: nsC}
+        ));
+    }
+    
+    function skipTurn() {
+        var cT = document.getElementById("turn-info").textContent;
+        if(cT.localeCompare(cl) === 0) {
+            chatSocket.send(JSON.stringify(
+                {nameOfGame: nG, username: us, color: cl, skipTurn: "true"}
+            ));
+        }
+    }
+    
+        chatSocket.onmessage = function (event) {
+            var data = JSON.parse(event.data);
+    
+            if (data.error) {
+                alert(data.error);
+                chatSocket.close();
+                window.location.href = "/";
+            }
+            else if(data.name) {
+                nG = data.name;
+                us = data.user;
+                cl = data.color;
+                nP = data.numberOfPlayers;
+                document.getElementById("player-color").innerHTML = cl;
+                document.getElementById("player-color").style.color = getColor(cl);
+                document.getElementById("turn-info").innerHTML = "WAIT FOR PLAYERS";
+                document.getElementById("turn-info").style.color = WARNING;
+            }
+            else if(data.kind === "start") {
+                drawPieces();
+                currentTurn = getTurn(data.turn);
+                document.getElementById("turn-info").innerHTML = data.turn;
+                document.getElementById("turn-info").style.color = getColor(data.turn);
+            }
+            else if(data.kind === "skipTurn") {
+                currentTurn = getTurn(data.turn);
+                document.getElementById("turn-info").innerHTML = data.turn;
+                document.getElementById("turn-info").style.color = getColor(data.turn);
+            }
+            else if(data.kind === "move") {
+                var newSBlock = findFieldByS(data.newRow, data.newCol),
+                    oldSBlock = findFieldByS(data.oldRow, data.oldCol);
+    
+                var newBlock = {
+                    "row": newSBlock.row,
+                    "col": newSBlock.col
+                };
+    
+                var oldBlock = {
+                    "row": oldSBlock.row,
+                    "col": oldSBlock.col
+                };
+    
+                checkIfPieceClicked(oldBlock);
+                movePiece(newBlock);
+                currentTurn = getTurn(data.turn);
+                document.getElementById("turn-info").innerHTML = data.turn;
+                document.getElementById("turn-info").style.color = getColor(data.turn);
+            }
+            else if(data.kind === "winner") {
+                alert("Player " + data.user + " (" + data.turn + ") has all pawns in the correct base!");
+            }
+        };
 
 function screenToBlock(x, y) {
     var block = null;
@@ -1566,107 +1670,3 @@ function defaultPositions() {
             ]
 	};
 }
-
-function findFieldByS(osR, osC) {
-    var curPiece = null,
-		iPieceCounter = 0,
-        pieceAtBlock = null
-        teamOfPieces = json.fields;
-
-	for (iPieceCounter = 0; iPieceCounter < teamOfPieces.length; iPieceCounter++) {
-
-		curPiece = teamOfPieces[iPieceCounter];
-
-		if (curPiece.sCol === osC && curPiece.sRow === osR) {
-            curPiece.position = iPieceCounter;
-			pieceAtBlock = curPiece;
-			iPieceCounter = teamOfPieces.length;
-		}
-	}
-
-	return pieceAtBlock;
-}
-
-var WS = window['MozWebSocket'] ? MozWebSocket : WebSocket;
-var chatSocket;
-
-    if(@numberPlayers === 0) {
-        var chatSocket = new WS("@routes.Application.game(username, nameGame).webSocketURL(request)");
-    }
-    else {
-        var chatSocket = new WS("@routes.Application.gameNew(username, nameGame, numberPlayers, numberBots).webSocketURL(request)");
-    }
-
-    var nG;
-    var us;
-    var cl;
-    var nP;
-
-    function sendMessage(osR, osC, nsR, nsC) {
-        chatSocket.send(JSON.stringify(
-            {nameOfGame: nG, username: us, color: cl, oldRow: osR, oldCol: osC, newRow: nsR, newCol: nsC}
-        ));
-    }
-
-    function skipTurn() {
-        var cT = document.getElementById("turn-info").textContent;
-        if(cT.localeCompare(cl) === 0) {
-            chatSocket.send(JSON.stringify(
-                {nameOfGame: nG, username: us, color: cl, skipTurn: "true"}
-            ));
-        }
-    }
-
-    chatSocket.onmessage = function (event) {
-        var data = JSON.parse(event.data);
-
-        if (data.error) {
-            alert(data.error);
-            chatSocket.close();
-            window.location.href = "/";
-        }
-        else if(data.name) {
-            nG = data.name;
-            us = data.user;
-            cl = data.color;
-            nP = data.numberOfPlayers;
-            document.getElementById("player-color").innerHTML = cl;
-            document.getElementById("player-color").style.color = getColor(cl);
-            document.getElementById("turn-info").innerHTML = "WAIT FOR PLAYERS";
-            document.getElementById("turn-info").style.color = WARNING;
-        }
-        else if(data.kind === "start") {
-            drawPieces();
-            currentTurn = getTurn(data.turn);
-            document.getElementById("turn-info").innerHTML = data.turn;
-            document.getElementById("turn-info").style.color = getColor(data.turn);
-        }
-        else if(data.kind === "skipTurn") {
-            currentTurn = getTurn(data.turn);
-            document.getElementById("turn-info").innerHTML = data.turn;
-            document.getElementById("turn-info").style.color = getColor(data.turn);
-        }
-        else if(data.kind === "move") {
-            var newSBlock = findFieldByS(data.newRow, data.newCol),
-                oldSBlock = findFieldByS(data.oldRow, data.oldCol);
-
-            var newBlock = {
-                "row": newSBlock.row,
-                "col": newSBlock.col
-            };
-
-            var oldBlock = {
-                "row": oldSBlock.row,
-                "col": oldSBlock.col
-            };
-
-            checkIfPieceClicked(oldBlock);
-            movePiece(newBlock);
-            currentTurn = getTurn(data.turn);
-            document.getElementById("turn-info").innerHTML = data.turn;
-            document.getElementById("turn-info").style.color = getColor(data.turn);
-        }
-        else if(data.kind === "winner") {
-            alert("Player " + data.user + " (" + data.turn + ") has all pawns in the correct base!");
-        }
-    };

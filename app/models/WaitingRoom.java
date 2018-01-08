@@ -18,9 +18,10 @@ import static java.util.concurrent.TimeUnit.*;
  * Waiting room is the most important actor, receives messages from websockets and creates games.
  */
 public class WaitingRoom extends UntypedActor {
-    static ActorRef defaultRoom = Akka.system().actorOf(Props.create(WaitingRoom.class)); // Default room
-    static Map<String, ActorRef> games = new HashMap<String, ActorRef>(); // existing games
-    static Map<String, WebSocket.Out<JsonNode>> members = new HashMap<String, WebSocket.Out<JsonNode>>(); // members that joined
+    private static ActorRef defaultRoom = Akka.system().actorOf(Props.create(WaitingRoom.class)); // Default room
+    private static Map<String, ActorRef> games = new HashMap<String, ActorRef>(); // existing games
+    private static ArrayList<String> availableGames = new ArrayList<>(); // games available to join
+    private static Map<String, WebSocket.Out<JsonNode>> members = new HashMap<String, WebSocket.Out<JsonNode>>(); // members that joined
 
     /**
      * Joins to existing game or creates new one. Manages all websockets.
@@ -40,8 +41,9 @@ public class WaitingRoom extends UntypedActor {
             if(isNewGame && !games.containsKey(nameGame)) { // creates new game
                 ActorRef newGame = Akka.system().actorOf(Props.create(GameRoom.class));
                 games.put(nameGame, newGame);
-                newGame.tell(new GameRoom.Making(nameGame, players, bots), null);
-                newGame.tell(new GameRoom.Join(username, members.get(username)), null);
+                availableGames.add(nameGame);
+                newGame.tell(new GameRoom.Making(nameGame, players, bots), defaultRoom);
+                newGame.tell(new GameRoom.Join(username, members.get(username)), defaultRoom);
             }
             else if(isNewGame && games.containsKey(nameGame)) { // if name of games was used earlier
                 ObjectNode event = Json.newObject();
@@ -50,7 +52,7 @@ public class WaitingRoom extends UntypedActor {
             }
             else { // joins to existing name
                 ActorRef currentGame = games.get(nameGame); 
-                currentGame.tell(new GameRoom.Join(username, members.get(username)), null);
+                currentGame.tell(new GameRoom.Join(username, members.get(username)), defaultRoom);
             }
 
             // For each event received on the socket,
@@ -59,12 +61,12 @@ public class WaitingRoom extends UntypedActor {
                     if(event.has("nameOfGame") && games.containsKey(event.get("nameOfGame").toString().replace("\"", "")) &&
                                 event.has("skipTurn")) { // skips turn
                         ActorRef currentGame = games.get(event.get("nameOfGame").toString().replace("\"", ""));
-                        currentGame.tell(new GameRoom.Skip(username, event.get("color").toString().replace("\"", "")), null);
+                        currentGame.tell(new GameRoom.Skip(username, event.get("color").toString().replace("\"", "")), defaultRoom);
                     }
                     else if(event.has("nameOfGame") && games.containsKey(event.get("nameOfGame").toString().replace("\"", ""))) { // makes move
                         ActorRef currentGame = games.get(event.get("nameOfGame").toString().replace("\"", ""));
                         currentGame.tell(new GameRoom.Move(username, event.get("oldRow").asInt(), event.get("oldCol").asInt(),
-                            event.get("newRow").asInt(), event.get("newCol").asInt()), null);
+                            event.get("newRow").asInt(), event.get("newCol").asInt()), defaultRoom);
                     }
                 }
             });
@@ -74,7 +76,7 @@ public class WaitingRoom extends UntypedActor {
                 public void invoke() {
                     ActorRef currentGame = games.get(nameGame);
                     currentGame.tell(new GameRoom.Quit(username), defaultRoom);
-                    defaultRoom.tell(new Quit(nameGame, username), null);
+                    defaultRoom.tell(new Quit(nameGame, username), defaultRoom);
                 }
             });
         } 
@@ -98,6 +100,11 @@ public class WaitingRoom extends UntypedActor {
                 members.put(join.username, join.channel);
                 getSender().tell("OK", getSelf());
             }
+        }
+        else if(message instanceof Full) {
+            Full full = (Full) message;
+
+            availableGames.remove(full.nameOfGame);
         }
         else if(message instanceof Quit)  {
             Quit quit = (Quit) message;
@@ -123,7 +130,7 @@ public class WaitingRoom extends UntypedActor {
      */
     public static String getGames() {
         String newJSON = "{games:[";
-        for(String key : games.keySet()) {
+        for(String key : availableGames) {
             newJSON += "`" + key + "`,";
         }
         newJSON += "]}";
@@ -165,6 +172,14 @@ public class WaitingRoom extends UntypedActor {
         public Quit(String nameOfGame, String username) {
             this.nameOfGame = nameOfGame;
             this.username = username;
+        }
+    }
+
+    public static class Full {
+        final String nameOfGame;
+
+        public Full(String nameOfGame) {
+            this.nameOfGame = nameOfGame;
         }
     }
 
