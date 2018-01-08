@@ -41,7 +41,8 @@ public interface BoardInterface {
      * Performs the movement of the randomly chosen pawn owned by the player which is handled by the bot.
      * 
      * @param bot player that is a bot
+     * @throws WrongMoveException thrown if move is incorrect
      * @return array of coordinates
      */
-    ArrayList<BoardCoordinates> performBotMove(Player bot);
+    ArrayList<BoardCoordinates> performBotMove(Player bot) throws WrongMoveException;
 }

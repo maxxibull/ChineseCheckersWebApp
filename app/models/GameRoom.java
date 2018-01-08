@@ -23,7 +23,7 @@ public class GameRoom extends UntypedActor {
     private Making info; // info about the game - name, number of players and bots
     private ArrayList<String> colors; // colors in the game
     private int playersInGame = 0; // current number of players
-    private Board board; // board for the game
+    private BoardInterface board; // board for the game
     private LinkedList<String> currentTurn; // ordered list of colors
 
     // choose colors in comparision to number of players
@@ -121,9 +121,13 @@ public class GameRoom extends UntypedActor {
         Player bot = checkNextTurnIsBot();
 
         if(bot != null) {
-            ArrayList<BoardCoordinates> makeMove = board.performBotMove(bot);
-            getSelf().tell(new Move(bot.getUsername(), makeMove.get(0).getRow(), makeMove.get(0).getColumn(),
-                    makeMove.get(1).getRow(), makeMove.get(1).getColumn()), null);
+            try {
+                ArrayList<BoardCoordinates> makeMove = board.performBotMove(bot);
+                getSelf().tell(new Move(bot.getUsername(), makeMove.get(0).getRow(), makeMove.get(0).getColumn(),
+                        makeMove.get(1).getRow(), makeMove.get(1).getColumn()), null);
+            } catch(Exception ex) {
+                getSelf().tell(new Skip(bot.getUsername(), currentTurn.getFirst()), null);
+            }
         }
     }
 
@@ -185,6 +189,7 @@ public class GameRoom extends UntypedActor {
                 }
     
                 currentTurn.removeFirst();
+                
                 notifyAll("move", currentTurn.getFirst(), move.username, move.oldRow, move.oldCol, move.newRow, move.newCol);
     
                 performBotMoveIfItsTurn();

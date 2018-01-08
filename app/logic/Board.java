@@ -328,13 +328,21 @@ public class Board implements BoardInterface {
 
         Map<BoardCoordinates, ArrayList<BoardCoordinates>> coordinatesWithPositionsToMoveTo = new HashMap<>();
 
-        if (playerColor == Color.Red || playerColor == Color.Black) {
+        if (playerColor == Color.Red) {
             single_dxdy = new int[][] {{0, 1}, {1, 0}, {1, 1}, {0, -1}};
             multi_dxdy = new int[][] {{0, 2}, {2, 0}, {2, 2}, {0, -2}};
         }
-        else if (playerColor == Color.Yellow || playerColor == Color.Blue) {
+        else if (playerColor == Color.Black) {
+            single_dxdy = new int[][] {{0, 1}, {1, 0}, {1, 1}, {-1, 0}};
+            multi_dxdy = new int[][] {{0, 2}, {2, 0}, {2, 2}, {-2, 0}};
+        }
+        else if (playerColor == Color.Yellow) {
             single_dxdy = new int[][] {{0, -1}, {-1, 0}, {-1, -1}, {0, 1}};
             multi_dxdy = new int[][] {{0, -2}, {-2, 0}, {-2, -2}, {0, 2}};
+        }
+        else if (playerColor == Color.Blue) {
+            single_dxdy = new int[][] {{0, -1}, {-1, 0}, {-1, -1}, {1, 1}};
+            multi_dxdy = new int[][] {{0, -2}, {-2, 0}, {-2, -2}, {2, 2}};
         }
         else if (playerColor == Color.Orange) {
             single_dxdy = new int[][] {{0, 1}, {-1, 0}, {-1, -1}, {1, 1}};
@@ -387,9 +395,10 @@ public class Board implements BoardInterface {
      * Performs the movement of the randomly chosen pawn owned by the player which is handled by the bot.
      * 
      * @param bot player that is a bot
+     * @throws WrongMoveException thrown if move is incorrect
      * @return array of coordinates - (0) old field, (1) new field
      */
-    public ArrayList<BoardCoordinates> performBotMove(Player bot) {
+    public ArrayList<BoardCoordinates> performBotMove(Player bot) throws WrongMoveException {
         ArrayList<BoardCoordinates> move = new ArrayList<>();
 
         try {
@@ -404,6 +413,11 @@ public class Board implements BoardInterface {
             // Randomly chose the pawn that will be moved from the generated hashmap.
             Random generator = new Random();
             List<BoardCoordinates> pawns = new ArrayList<BoardCoordinates>(mapOfPawnsToMove.keySet());
+            
+            if(pawns.size() == 0) {
+                throw new WrongMoveException();
+            }
+
             BoardCoordinates pawnChosen = pawns.get(generator.nextInt(pawns.size()));
 
             move.add(0, pawnChosen);
