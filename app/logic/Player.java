@@ -9,7 +9,7 @@ public class Player {
     private final boolean isBot; // true - bot, false - human 
 
     /**
-     * The main constructor of Player class, sets variables.
+     * The main constructor of Player class, sets its properties.
      * 
      * @param playerColor color of player
      * @param username name of player
@@ -22,8 +22,8 @@ public class Player {
     }
 
     /**
-     * Returns color of the player
-     * 
+     * Returns the color of the player
+     *
      * @return color of the player
      */
     public Color getColor() {

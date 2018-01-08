@@ -27,7 +27,7 @@ public class BoardBotTest {
     public void setUp() throws Exception {
         this.board = new Board(6);
         this.map = board.getPawnsCoordinates();
-        this.player = new Player(Color.Red, "Stevie", false);
+        this.player = new Player(logic.Color.Red, "Stevie", false);
     }
 
     @Test
@@ -35,5 +35,10 @@ public class BoardBotTest {
         Player player = new Player(logic.Color.Black, "Julie", true);
 
         board.movePawn(board.performBotMove(player).get(0), board.performBotMove(player).get(1), player);
+    }
+
+    @Test
+    public void checkIfBotRandomizesPawnToMoveAndItsNewPositionCorrectly() {
+        assertTrue(!performBotMove(player).isEmpty());
     }
 }
