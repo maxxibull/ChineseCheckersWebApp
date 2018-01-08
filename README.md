@@ -31,6 +31,13 @@ The user interface part was mostly written based on excellent Twitter's Bootstra
 
 The game board is created on a canvas by the created JavaScript script.
 
+## Running the project
+
+To run the project on your system, in the project's directory execute:
+```
+play run
+```
+
 ## Sidenotes
 
 In the future the authors will also try to create a project using the newest Play (2.6.10) and Akka framework versions.
