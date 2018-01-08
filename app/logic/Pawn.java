@@ -1,7 +1,7 @@
 package logic;
 
 /**
- * Includs info about color of pawn
+ * Includes info about color of pawn
  */
 public class Pawn {
     private Color color;

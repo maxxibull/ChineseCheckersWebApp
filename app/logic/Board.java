@@ -6,20 +6,21 @@ import java.util.*;
 import java.util.ArrayList;
 
 /**
- * The class creates board for chinese checkers, manages it, checks correctness of movements and makes movements for bots.
+ * Creates the board for Chinese Checkers game, manages it, checks correctness of movements and performs movements for bots.
  */
 public class Board implements BoardInterface {
-    private int numberOfPlayers; // number of players - with bots
-    private ArrayList<ArrayList<Field>> gameBoard; // array for GameField objects
-    private ArrayList<Color> colorsOfPlayersOnBoard; // colors of pawns
-    private ArrayList<BoardCoordinates> jumps; // array for checkPossibleWaysForPawn and checkMultiMoveIsCorrect methods
+    private int numberOfPlayers;                        // number of players - with bots
+    private ArrayList<ArrayList<Field>> gameBoard;      // array for GameField objects
+    private ArrayList<Color> colorsOfPlayersOnBoard;    // colors of pawns
+    private ArrayList<BoardCoordinates> jumps;          // array for checkPossibleWaysForPawn and checkMultiMoveIsCorrect methods
 
     /**
-     * The class has only one constructor that creates gameBoard with GameField objects and Pawn objects.
-     * What is more, the constructor choose colors which will be used by players.
+     * The class has only one constructor which creates the gameBoard.
+     * The board consists of fields (GameField class) upon which the pawns (Pawn class) are placed.
+     * The constructor also assigns the colors to the players in the game
      * 
-     * @param numberOfPlayers number of players with bots
-     * @throws IllegalArgumentException thrown when number of players is different than 2, 3, 4 or 6
+     * @param numberOfPlayers number of players (including bot players)
+     * @throws IllegalArgumentException which is thrown when a number of players is different than 2, 3, 4 or 6
      */
     public Board(int numberOfPlayers) throws IllegalArgumentException {
 
@@ -60,7 +61,7 @@ public class Board implements BoardInterface {
     Null means that there is no Field.
      */
 
-    // Creates an array of fields (GameField)
+    // Creates an array of fields (of GameField type), which form our board.
     private ArrayList<ArrayList<Field>> assignFieldsToBoard() {
         ArrayList<ArrayList<Field>> newGameBoard = new ArrayList<>();
         ArrayList<Field> newRow;
@@ -102,7 +103,7 @@ public class Board implements BoardInterface {
         return newGameBoard;
     }
 
-    // Creates new pawns and places it on appropriate field
+    // Creates new pawns and places them to the base fields
     private void assignPawnsToBaseFields() {
         ArrayList<Field> list;
         for (int i = 0; i < 19; i++) {
@@ -115,7 +116,7 @@ public class Board implements BoardInterface {
         }
     }
 
-    // Chooses colors for players
+    // Assigns colors to the players
     private ArrayList<Color> setColorsOfPlayers() {
         ArrayList<Color> colors = new ArrayList<>();
 
@@ -148,11 +149,11 @@ public class Board implements BoardInterface {
     }
 
     /**
-     * The method moves the pawn into its new field.
+     * Moves the pawn from its' current position to a new field.
      *
-     * @param oldPawnPosition previous position of the pawn
-     * @param newPawnPosition new position of the pawn
-     * @param player          reference to player who wants to move the pawn
+     * @param oldPawnPosition current position of the pawn on the board
+     * @param newPawnPosition new position of the pawn on the board
+     * @param player          the player who wants to move the chosen pawn
      * @throws NullFieldException       thrown if one or both of coordinates point to null
      * @throws WrongFieldStateException thrown if there is a problem with pawn
      * @throws WrongMoveException       thrown if move is incorrect
@@ -189,21 +190,23 @@ public class Board implements BoardInterface {
         }
     }
 
-    // Can be use when we know the move is correct
+    // Moves the pawn from its current position to the new field
+    // Can be used only if we're sure of the validity of the movement
     private void movePawnToNewField(BoardCoordinates oldField, BoardCoordinates newField) {
         gameBoard.get(newField.getRow()).get(newField.getColumn())
                 .setPawn(gameBoard.get(oldField.getRow()).get(oldField.getColumn()).getPawn());
         gameBoard.get(oldField.getRow()).get(oldField.getColumn()).setPawn(null);
     }
 
-    // Checks whether we move the pawn by one field
+    // Checks if the distance between the fields is equal to one
+    // Used to check if the movement will be performed by one field only
     private boolean checkDistanceIsOneField(BoardCoordinates oldField, BoardCoordinates newField) {
         return (Math.abs(oldField.getRow() - newField.getRow()) + Math.abs(oldField.getColumn() - newField.getColumn())) == 1 ||
                 ((oldField.getColumn() - newField.getColumn()) == 1 && (oldField.getRow() - newField.getRow()) == 1) ||
                 ((oldField.getColumn() - newField.getColumn()) == -1 && (oldField.getRow() - newField.getRow()) == -1);
     }
 
-    // Checks if the pawn is in enemy base
+    // Checks if the pawn is in the enemy's base
     private boolean checkIfPawnIsInEnemyBase(BoardCoordinates oldField) {
         Color oldFieldColor = gameBoard.get(oldField.getRow()).get(oldField.getColumn()).getColor(),
                 pawnColor = gameBoard.get(oldField.getRow()).get(oldField.getColumn()).getPawn().getColor();
@@ -216,7 +219,8 @@ public class Board implements BoardInterface {
         }
     }
 
-    // Checks that the movement can be executed if pawn is in enemy base (it's not possible to get out of enemy's base)
+    // Checks if the movement can be performed when pawn is in the enemy's base
+    // It's not possible for the pawn to step out of the enemy's base once it's in it
     private boolean checkIfPawnInEnemyBaseCanMoveToNewField(BoardCoordinates oldField, BoardCoordinates newField) {
         Color oldFieldColor = gameBoard.get(oldField.getRow()).get(oldField.getColumn()).getColor(),
                 newFieldColor = gameBoard.get(newField.getRow()).get(newField.getColumn()).getColor();
@@ -225,19 +229,14 @@ public class Board implements BoardInterface {
             return newFieldColor == oldFieldColor;
         }
         else {
-            return true; // the pawn isn't in enemy's base
+            return true; // the pawn is not in the enemy's base
         }
     }
 
-    /* The method finds possible ways for the pawn over other pawns,
-        there is 6 ways to check:
-                       xx
-                       xPx
-                        xx
-        where P - pawn, x - fields where pawn can move to.
-        There are two free spaces - top right corner and bottom left corner.
-        These two spaces cannot be use, because gameBoard is imagination of real board in different way.
-        This is recursive method;
+    /**
+     * Calculates all of the possibilities for the movement of a pawn with a given coordinates and stores
+     * them in jumps ArrayList
+     * @param coordinates the coordinates of a pawn
      */
     public void checkPossibleWaysForPawn(BoardCoordinates coordinates) {
         int X = coordinates.getColumn();
@@ -287,7 +286,7 @@ public class Board implements BoardInterface {
 
     }
 
-    // Checks that jumps array doesn't contain particular coordinates
+    // Checks if the jumps array does not contain the provided coordinate for movement
     private boolean checkIsInJumps(BoardCoordinates bc) {
         for(BoardCoordinates b : jumps) {
             if(b.getRow() == bc.getRow() && b.getColumn() == bc.getColumn()) {
@@ -297,7 +296,7 @@ public class Board implements BoardInterface {
         return false;
     }
 
-    // Checks that the move over other pawns is correct
+    // Checks whether the movement over other pawns is correct
     private boolean checkMultiMoveIsCorrect(BoardCoordinates oldField, BoardCoordinates newField) {
         jumps = new ArrayList<>();
         
@@ -438,7 +437,7 @@ public class Board implements BoardInterface {
         return move;
     }
 
-    // return coordinates of all pawns of color
+    // Returns the coordinates of every single pawn of the chosen color
     private ArrayList<BoardCoordinates> getCoordinatesOfAllPawnsOfColor(Color playerColor) {
         ArrayList<BoardCoordinates> allPawns = getPawnsCoordinates();
         ArrayList<BoardCoordinates> pawnsOfChosenColor = new ArrayList<>();
@@ -501,7 +500,7 @@ public class Board implements BoardInterface {
         return numberOfPawnsInBase == baseSize;
     }
 
-    // Returns color of opposite base (pawns)
+    // Returns a color of the opposite base (player) for the chosen color
     private Color getOppositeColor(Color col) {
         if(col.equals(Color.Red)) {
             return Color.Yellow;
