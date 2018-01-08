@@ -3,10 +3,25 @@
 <!DOCTYPE html>
 <html lang="en">
     <head>
-        <meta charset="utf-8" />
-        <title>Chinese Checkers - New Game</title>
-        <link rel="stylesheet" type="text/css" href="@routes.Assets.at("stylesheets/newgame.css")">
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+            <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+        <meta name="description" content="Online multiplayer game of Chinese Checkers">
+        <meta name="author" content="Maciej Kabała and Paweł Narolski">
+        <link rel="icon" href="../../favicon.ico">
+
+        <title>New Game - Chinese Checkers</title>
+
+            <!-- Bootstrap core CSS -->
+        <link rel="stylesheet" type="text/css" href="@routes.Assets.at("stylesheets/bootstrap.css")">
+
+            <!-- Custom styles for this template -->
+        <link rel="stylesheet" type="text/css" href="@routes.Assets.at("stylesheets/jumbotron-narrow.css")">
+
+
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+
         <script>
             $(document).ready(function () {
                 $("#players-number").change(function () {
@@ -25,27 +40,65 @@
         </script>
     </head>
     <body>
-        <h1>Chinese Checkers Web App</h1>
-        <h2>Fill the form and submit, @username.</h2>
-        <form action="/room">
-            <input id="username" name="username" type="hidden" value="@username">
-            <span>Name of new game:</span><br>
-            <input id="game-name" name="gameName" type="text" placeholder="Name">
-            <br><span>Number of players:</span><br>
-            <select id="players-number" name="playersNumber">
-                <option value="2">2</option>
-                <option value="3">3</option>
-                <option value="4">4</option>
-                <option value="6">6</option>
-            </select>
-            <br><span>Number of bots:</span><br>
-            <select id="bots-number" name="botsNumber">
-                <option value="0">0</option>
-                <option value="1">1</option>
-            </select>
-            <br>
-            <input action="submit" type="submit" value="SUBMIT">
-        </form>
-        <div id="my"></div>
+            <nav class="navbar navbar-inverse bg-inverse navbar-fixed-top">
+                <div class="container">
+                    <div class="navbar-header">
+                        <a class="navbar-brand" href="/">Chinese Checkers</a>
+                    </div>
+                    <div id="navbar" class="navbar-collapse collapse">
+                        <ul class="nav navbar-nav navbar-right">
+                            <li class="active"><a href="./">New game <span class="sr-only">(current)</span></a></li>
+                            <li><a href="/">Log out</a></li>
+                        </ul>
+                    </div><!--/.nav-collapse -->
+                </div>
+            </nav>
+
+            <div class="container">
+                <br />
+                <div class="page-header">
+                    <h1>Create a new game</h1>
+                    <p>Configure a game room of your own and suit it to your needs.</p>
+                </div>
+                <div>
+                    <form action="/room">
+                        <input id="username" name="username" type="hidden" value="@username">
+                        <div class="form-group">
+                            <label for="nameInput">Name of the game room</label>
+                            <input type="text" class="form-control" id="game-name" name="gameName" aria-describedby="emailHelp" placeholder="Enter game room's name">
+                            <small id="emailHelp" class="form-text text-muted">An unique, catchy name will help your friends join the game.</small>
+                        </div>
+                        <div class="form-group">
+                            <label for="noPlayersSelect">Number of players</label>
+                            <select class="form-control" id="players-number" name="playersNumber">
+                                <option>2</option>
+                                <option>3</option>
+                                <option>4</option>
+                                <option>5</option>
+                                <option>6</option>
+                            </select>
+                            <small id="playersHelp" class="form-text text-muted">Select how many players will be able to play in the game.</small>
+                        </div>
+                        <div class="form-group">
+                            <label for="noPlayersSelect">Number of bots</label>
+                            <select class="form-control" id="bots-number" name="botsNumber">
+                                <option>0</option>
+                                <option>1</option>
+                            </select>
+                            <small id="emailHelp" class="form-text text-muted">Select how many of the previously chosen players will be bots.</small>
+                        </div>
+                        <input action="submit" class="btn btn-primary" type="submit" value="Submit">
+                        <br />
+                        <br />
+                    </form>
+                </div>
+                <footer class="footer">
+                    <p>&copy; 2017 Maciej Kabała and Paweł Narolski.</p>
+                </footer>
+
+            </div> <!-- /container -->
+
+
+
     </body>
 </html>

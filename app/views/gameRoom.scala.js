@@ -10,7 +10,7 @@ var RED = '#FB4357',
     YELLOW = '#f2de16';
     ORANGE = '#F4762A';
     BLACK = '#071E22';
-    NEUTRAL = '#fffdf7';
+    NEUTRAL = '#f8f9fa';
     WARNING = '#ff1717';
 
 var ctx = null,
@@ -220,14 +220,14 @@ function drawBlock(iRowCounter, iBlockCounter) {
     if(iBlockCounter % 2) {
         ctx.beginPath();
         ctx.arc(iRowCounter * BLOCK_SIZE + BLOCK_SIZE, iBlockCounter * BLOCK_SIZE + BLOCK_SIZE / 2,
-            17, 0, 2 * Math.PI, false);
+            18, 0, 2 * Math.PI, false);
         ctx.fill();
         ctx.stroke();
     }
     else {
         ctx.beginPath();
         ctx.arc(iRowCounter * BLOCK_SIZE + BLOCK_SIZE / 2, iBlockCounter * BLOCK_SIZE + BLOCK_SIZE / 2,
-            17, 0, 2 * Math.PI, false);
+            18, 0, 2 * Math.PI, false);
         ctx.fill();
         ctx.stroke();
     }

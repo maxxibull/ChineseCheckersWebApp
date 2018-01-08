@@ -1,18 +1,68 @@
 <!DOCTYPE html>
 <html lang="en">
     <head>
-        <meta charset="utf-8" />
-        <title>Chinese Checkers - Welcome</title>
-        <link rel="stylesheet" type="text/css" href="@routes.Assets.at("stylesheets/welcome.css")">
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+            <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+        <meta name="description" content="Online multiplayer game of Chinese Checkers">
+        <meta name="author" content="Maciej Kabała and Paweł Narolski">
+        <link rel="icon" href="../../favicon.ico">
+
+        <title>Chinese Checkers</title>
+
+            <!-- Bootstrap core CSS -->
+        <link rel="stylesheet" type="text/css" href="@routes.Assets.at("stylesheets/bootstrap.css")">
+
+        <!-- Custom styles for this template -->
+        <link rel="stylesheet" type="text/css" href="@routes.Assets.at("stylesheets/cover.css")">
 
     </head>
     <body>
-        <h1>Chinese Checkers Web App</h1>
-        <h2>It's a simple game of chinese checkers written in Java using Play Framework and Akka actor system.</h2>
-        <h3>Enter your username to start</h3>
-        <form action="@routes.Application.waitingRoom()">
-            <input id="username" name="username" type="text" placeholder="Username">
-            <button class="button" type="submit">SIGN IN</button>
-        </form>
+        <div class="site-wrapper">
+            <div class="site-wrapper-inner">
+                <div class="cover-container">
+                    <div class="masthead clearfix">
+                        <div class="inner">
+                            <h3 class="masthead-brand">Chinese Checkers</h3>
+                            <nav>
+                                <ul class="nav masthead-nav">
+                                    <li class="active"><a href="#">Sign in</a></li>
+                                    <li><a href="#">Features</a></li>
+                                </ul>
+                            </nav>
+                        </div>
+                    </div>
+
+                    <div class="inner cover">
+                        <h1 class="cover-heading">Jump right into the action.</h1>
+                        <p class="lead">Discover an unparallel rush of excitement and joy at a click of a button. Join the vivid online community of Chinese Checkers players today.</p>
+                        <form class="input-group input-group-lg" action="@routes.Application.waitingRoom()">
+                            <span class="input-group-addon" id="sizing-addon1">@@</span>
+                                <input type="text" id="username" name="username" class="form-control" placeholder="Enter your username" aria-describedby="sizing-addon1">
+                                <span class="input-group-btn">
+                                    <button class="btn btn-default" type="submit">Go!</button>
+                                </span>
+                        </form>
+                        <br />
+                        <p class="lead" style="font-size: 12pt;">
+                            You will be able to create your own game or join the existing room once you sign in.
+                        </p>
+                    </div>
+
+                    <div class="mastfoot">
+                        <div class="inner">
+                            <p>Designed with <span class="glyphicon glyphicon-heart" aria-hidden="true"></span> by <a href="http://github.com/maxxibull">Maciej Kabała</a> and <a href="https://github.com/maxster256">Paweł Narolski</a>.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+            <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+            <!-- Include all compiled plugins (below), or include individual files as needed -->
+        <script src="js/bootstrap.min.js"></script>
     </body>
 </html>
+

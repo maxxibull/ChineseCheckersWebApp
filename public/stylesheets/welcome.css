@@ -1,12 +1,25 @@
 html {
     display: table;
     margin: auto;
-    max-width: 80%;
+    max-width: 100%;
 }
 
 body {
     display: table-cell;
     vertical-align: middle;
+}
+
+.navbar {
+    overflow: hidden;
+    background-color: #333;
+    position: fixed; /* Set the navbar to fixed position */
+    top: 0; /* Position the navbar at the top of the page */
+    width: 100%; /* Full width */
+}
+
+.container {
+    padding-left: 20%;
+    padding-right: 20%;
 }
 
 h1 {

@@ -3,25 +3,69 @@
 <!DOCTYPE html>
 <html lang="en">
     <head>
-        <meta charset="utf-8" />
-        <title>Chinese Checkers - Waiting Room</title>
-        <link rel="stylesheet" type="text/css" href="@routes.Assets.at("stylesheets/waiting.css")">
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+            <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+        <meta name="description" content="Online multiplayer game of Chinese Checkers">
+        <meta name="author" content="Maciej Kabała and Paweł Narolski">
+        <link rel="icon" href="../../favicon.ico">
+
+        <title>Waiting Room - Chinese Checkers</title>
+
+            <!-- Bootstrap core CSS -->
+        <link rel="stylesheet" type="text/css" href="@routes.Assets.at("stylesheets/bootstrap.css")">
+
+            <!-- Custom styles for this template -->
+        <link rel="stylesheet" type="text/css" href="@routes.Assets.at("stylesheets/jumbotron-narrow.css")">
     </head>
     <body>
-        <h1>Chinese Checkers Web App</h1>
-        <h2>Hey @username! Choose game to join or create new one.</h2>
-        <span>
-            <form action="@routes.Application.newGame(username)">
-                <input id="username" name="username" type="hidden" value="@username">
-                <input action="submit" type="submit" value="NEW GAME">
-            </form>
-        </span>
-        <span>
-            <h3>Games</h3>
-            <ul id="games-list">
+            <nav class="navbar navbar-inverse bg-inverse navbar-fixed-top">
+                <div class="container">
+                    <div class="navbar-header">
+                        <a class="navbar-brand" href="/">Chinese Checkers</a>
+                    </div>
+                    <div id="navbar" class="navbar-collapse collapse">
+                        <ul class="nav navbar-nav navbar-right">
+                            <li class="active"><a href="./">Waiting room <span class="sr-only">(current)</span></a></li>
+                            <li><a href="/">Log out</a></li>
+                        </ul>
+                    </div><!--/.nav-collapse -->
+                </div>
+            </nav>
 
-            </ul>
-        </span>
+        <div class="container">
+            <br />
+            <div class="jumbotron">
+                <h1>Howdy, @username!</h1>
+                <p class="lead">You can create a brand new game of your own or join the existing room from the list below.</p>
+                <form action="@routes.Application.newGame(username)">
+                    <input id="username" name="username" type="hidden" value="@username">
+                    <input class="btn btn-lg btn-success" action="submit" type="submit" value="Create new room">
+                </form>
+            </div>
+
+            <div class="row marketing">
+                <div class="col-lg-6">
+                    <h4><span class="glyphicon glyphicon-pawn" aria-hidden="true"></span> How to play?</h4>
+                    <p>That's <b>really simple!</b> Just move all of your pawns to the base of the player who's in front of you. Whoever does that first, wins the game!</p>
+                </div>
+
+                <div class="col-lg-6">
+                    <h4><span class="glyphicon glyphicon-modal-window" aria-hidden="true"></span> List of existing rooms</h4>
+                    <p>Click the name of any of the rooms below to join.</p>
+
+                    <ul id="games-list" class="list-group">
+
+                    </ul>
+                </div>
+            </div>
+
+            <footer class="footer">
+                <p>&copy; 2017 Maciej Kabała and Paweł Narolski.</p>
+            </footer>
+
+        </div> <!-- /container -->
 
         <script>
             var i, item, link, node, 
@@ -33,13 +77,14 @@
 
             for(i = 0; i < json.games.length; i++) {
                 curPiece = json.games[i];
-                item = document.createElement("li");
+                //item = document.createElement("a");
                 link = document.createElement("a");
+                link.className = 'list-group-item';
                 link.href = "/room?username=@username&gameName=" + curPiece + "&playersNumber=0&botsNumber=0";
                 node = document.createTextNode(curPiece);
-                item.appendChild(link);
+                //item.appendChild(link);
                 link.appendChild(node);
-                element.appendChild(item);
+                element.appendChild(link);
             }
         </script>
     </body>
