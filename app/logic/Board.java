@@ -500,6 +500,28 @@ public class Board implements BoardInterface {
         return numberOfPawnsInBase == baseSize;
     }
 
+     /**
+     * The method returns color of particular pawn.
+     *
+     * @param pawnPosition coordinates of pawn
+     * @return color of pawn
+     * @throws WrongFieldStateException throws if there is no pawn on the field (coordinates are wrong)
+     */
+    @Override
+    public Color getPawnColor(BoardCoordinates pawnPosition) throws WrongFieldStateException {
+        Field field = gameBoard.get(pawnPosition.getRow()).get(pawnPosition.getColumn());
+
+        if (field == null) {
+            throw new WrongFieldStateException();
+        }
+        else if  (!field.isOccupied()) {
+            return null;
+        }
+        else {
+            return field.getPawn().getColor();
+        }
+    }
+
     // Returns a color of the opposite base (player) for the chosen color
     private Color getOppositeColor(Color col) {
         if(col.equals(Color.Red)) {

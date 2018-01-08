@@ -36,9 +36,4 @@ public class BoardBotTest {
 
         board.movePawn(board.performBotMove(player).get(0), board.performBotMove(player).get(1), player);
     }
-
-    @Test
-    public void checkIfBotRandomizesPawnToMoveAndItsNewPositionCorrectly() {
-        assertTrue(!performBotMove(player).isEmpty());
-    }
 }

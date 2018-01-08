@@ -45,4 +45,13 @@ public interface BoardInterface {
      * @return array of coordinates
      */
     ArrayList<BoardCoordinates> performBotMove(Player bot) throws WrongMoveException;
+
+    /**
+     * Returns color of the pawn;
+     * 
+     * @param pawnPosition coordinates of pawn
+     * @throws WrongFieldStateException thrown if field is empty
+     * @return color of pawn
+     */
+    Color getPawnColor(BoardCoordinates pawnPosition) throws WrongFieldStateException;
 }
