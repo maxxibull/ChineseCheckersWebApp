@@ -27,6 +27,10 @@ public class Application extends Controller {
         return ok(waitingRoom.render(username, WaitingRoom.getGames()));
     }
 
+    public static Result about() {
+        return ok(about.render());
+    }
+
     /**
      * Renders page with board (html)
      */

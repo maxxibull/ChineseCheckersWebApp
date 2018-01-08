@@ -86,7 +86,7 @@ var ctx = null,
                 nP = data.numberOfPlayers;
                 document.getElementById("player-color").innerHTML = cl;
                 document.getElementById("player-color").style.color = getColor(cl);
-                document.getElementById("turn-info").innerHTML = "WAIT FOR PLAYERS";
+                document.getElementById("turn-info").innerHTML = "Waiting for players...";
                 document.getElementById("turn-info").style.color = WARNING;
             }
             else if(data.kind === "start") {

@@ -10,6 +10,7 @@ GET     /room/newgame                    controllers.Application.newGame(usernam
 GET     /room/game1                      controllers.Application.game(username: String, gameName: String)
 GET     /room/game2                      controllers.Application.gameNew(username: String, gameName: String, playersNumber: Integer, botsNumber: Integer)
 GET     /assets/javascripts/gameroom.js  controllers.Application.gameRoomJs(username, gameName: String, playersNumber: Integer, botsNumber: Integer)
+GET     /about                           controllers.Application.about()
 
 # Map static resources from the /public folder to the /assets URL path
-GET     /assets/*file               controllers.Assets.at(path="/public", file)
+GET     /assets/*file                    controllers.Assets.at(path="/public", file)
