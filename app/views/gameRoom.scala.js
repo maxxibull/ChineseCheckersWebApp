@@ -11,7 +11,8 @@ var RED = '#FB4357',
     ORANGE = '#F4762A';
     BLACK = '#071E22';
     NEUTRAL = '#f8f9fa';
-    WARNING = '#ff1717';
+    WARNING = '#ff1717'
+    SELECTED = '#9300FF';
 
 var ctx = null,
 	json = null,
@@ -387,13 +388,44 @@ function drawBoard() {
 
 }
 
+function drawSelectedInfo(selectedPiece) {
+    var iRowCounter = currentTurn[selectedPiece.position].col,
+        iBlockCounter = currentTurn[selectedPiece.position].row;
+
+    if(iBlockCounter % 2) {
+        ctx.beginPath();
+        ctx.arc(iRowCounter * BLOCK_SIZE + BLOCK_SIZE, iBlockCounter * BLOCK_SIZE + BLOCK_SIZE / 2,
+            16, 0, 2 * Math.PI, false);
+        ctx.strokeStyle = SELECTED;
+        ctx.stroke();
+    }
+    else {
+        ctx.beginPath();
+        ctx.arc(iRowCounter * BLOCK_SIZE + BLOCK_SIZE / 2, iBlockCounter * BLOCK_SIZE + BLOCK_SIZE / 2,
+            16, 0, 2 * Math.PI, false);
+        ctx.strokeStyle = SELECTED;
+        ctx.stroke();
+    }
+
+    ctx.strokeStyle = '#2d2d2d';
+}
+
+function removeSelectedInfo(selectedPiece) {
+    drawBlock(currentTurn[selectedPiece.position].col, currentTurn[selectedPiece.position].row);
+    drawNewPawn();
+}
+
 function checkIfPieceClicked(clickedBlock) {
     var pieceAtBlock = getPieceAtBlockForTeam(currentTurn, clickedBlock);
-
-    if(currentTurn)
     
-    if(pieceAtBlock !== null) {
+    if(pieceAtBlock !== null && selectedPiece === null) {
         selectedPiece = pieceAtBlock;
+        drawSelectedInfo(selectedPiece);
+    }
+    else if(pieceAtBlock !== null && selectedPiece !== null) {
+        removeSelectedInfo(selectedPiece);
+        selectedPiece = pieceAtBlock;
+        drawSelectedInfo(selectedPiece);
     }
 }
 
